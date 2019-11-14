@@ -24,7 +24,7 @@ def display_image(epoch_no):
 
 
 # Use imageio to create an animated gif using the images saved during training
-def animated_git(anim_file='dgcan.fig')
+def animated_git(anim_file='dgcan.fig'):
     with imageio.get_writer(anim_file, mode='I') as writer:
         filenames = glob.glob('./images/image*.png')
         filenames = sorted(filenames)

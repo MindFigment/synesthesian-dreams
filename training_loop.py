@@ -1,5 +1,11 @@
 import tensorflow as tf
 import time
+import os
+
+from discriminator import make_discriminator_model
+from generator import make_generator_model
+from losses import generator_loss, discriminator_loss
+from utils import generate_and_save_images
 
 # Training loop
 EPOCHS = 50
@@ -28,7 +34,8 @@ checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
 # This annotation causes the function to be "compiled"
 @tf.function
 def train_step(images):
-    noise = tf.random.normal([BATCH_SIZE, noise_dim])
+    batch_size = images.shape[0]
+    noise = tf.random.normal([batch_size, noise_dim])
 
     with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
         generated_images = generator(noise, training=True)
@@ -51,7 +58,7 @@ def train(dataset, epochs):
         start = time.time()
 
         for image_batch in dataset:
-            #  print('IMAGE BATCH SHAPE {}'.format(image_batch.shape))
+            # print('IMAGE BATCH SHAPE {}'.format(image_batch.shape))
             train_step(image_batch)
 
         # Produce images for the GIF as we go
