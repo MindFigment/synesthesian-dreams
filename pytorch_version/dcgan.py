@@ -298,7 +298,7 @@ ims = [[plt.imshow(np.transpose(i,(1,2,0)), animated=True)] for i in img_list]
 anim = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 
 # plt.show()
-anim.save('../images/animation.gif', writer='imagemagick')
+anim.save('../images/animation.gif', writer='imagemagick', dpi=30)
 
 # Grab a batch of real images from the dataloader
 real_batch = next(iter(dataloader))
