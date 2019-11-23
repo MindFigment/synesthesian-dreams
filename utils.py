@@ -9,7 +9,7 @@ def generate_and_save_images(model, epoch, test_input):
     # This is so all layers run in inference mode (batchnorm)
     predictions = model(test_input, training=False)
 
-    fig = plt.figure(figsize=(4,4))
+    _ = plt.figure(figsize=(4,4))
 
     for i in range(predictions.shape[0]):
         plt.subplot(4, 4, i+1)
@@ -24,7 +24,7 @@ def display_image(epoch_no):
 
 
 # Use imageio to create an animated gif using the images saved during training
-def animated_git(anim_file='dgcan.fig')
+def animated_git(anim_file='dgcan.fig'):
     with imageio.get_writer(anim_file, mode='I') as writer:
         filenames = glob.glob('./images/image*.png')
         filenames = sorted(filenames)
