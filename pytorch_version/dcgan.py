@@ -183,7 +183,7 @@ netD.apply(weights_init)
 
 # Print the model
 print(netD)
-
+s
 
 # Initialize BCELoss function
 criterion = nn.BCELoss()
