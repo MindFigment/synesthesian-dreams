@@ -6,7 +6,6 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         self.ndf = feature_maps_size
         self.nc = channels_num  
-        print(self.ndf, self.nc)
         self.main = nn.Sequential(
             # input is (nc) x 64 x 64
             nn.Conv2d(self.nc, self.ndf, 4, 2, 1, bias=False),

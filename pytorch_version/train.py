@@ -13,7 +13,7 @@ import torch.nn as nn
 workers = 2
 
 # Batch size during training
-batch_size = 8
+batch_size = 256
 
 # Spatial size of training images. All images will be resized to this size using a transformer
 img_size = 64
@@ -22,7 +22,7 @@ img_size = 64
 nc = 3
 
 # Size of z latent vector (i.e. size of generator input)
-nz = 100
+nz = 50
 
 # Size of feature maps in generator
 ngf = 64
@@ -31,7 +31,7 @@ ngf = 64
 ndf = 64
 
 # Number of training epochs
-num_epochs = 5
+num_epochs = 100
 
 # Create transformer
 transforms_ = [
@@ -42,7 +42,8 @@ transforms_ = [
 ]
 
 # Create the dataset
-data_root = "../data/images/images"
+# data_root = "../data/images/images"
+data_root = "../data/best_artworks_of_all_time/normal"
 dataset = ArtDataset(data_root, transforms_=transforms_)
 
 # Define dataset parameters
@@ -119,7 +120,7 @@ for epoch in range(num_epochs):
         netD.zero_grad()
         # Format batch
         real_cpu = data.to(device)
-        b_size = real_cpu.size(0)
+img_list.        b_size = real_cpu.size(0)
         label = torch.full((b_size,), real_label, device=device)
         # Forward pass real batch through D
         output = netD(real_cpu).view(-1)
@@ -172,12 +173,12 @@ for epoch in range(num_epochs):
             D_losses.append(errD.item())
 
             # Check how the generator is doing by saving G's output on fixed_noise
-            if (iters % 500 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
+            if (iters % 10 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
                 with torch.no_grad():
                     fake = netG(fixed_noise).detach().cpu()
                 img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
 
-                iters += 1
+            iters += 1
 
 
     
