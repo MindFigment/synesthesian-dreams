@@ -42,7 +42,7 @@ def plot_animation(img_list, save_path="../images/real_vs_fake.gif", show=False)
     anim.save(save_path, writer='imagemagick', dpi=30)
 
 
-def plot_real_vs_fake(fake_imgs, real_imgs, save_path="../images/fake_vs_real.png", show=False):
+def plot_real_vs_fake(real_imgs, fake_imgs, save_path="../images/fake_vs_real.png", show=False):
     # Plot the real images
     plt.figure(figsize=(15,15))
     plt.subplot(1,2,1)
