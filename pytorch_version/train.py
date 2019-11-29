@@ -33,7 +33,7 @@ ngf = 64
 ndf = 64
 
 # Number of training epochs
-num_epochs = 100
+num_epochs = 2
 
 # Create transformer
 transforms_ = [
@@ -122,7 +122,7 @@ for epoch in range(num_epochs):
         netD.zero_grad()
         # Format batch
         real_cpu = data.to(device)
-img_list.        b_size = real_cpu.size(0)
+        b_size = real_cpu.size(0)
         label = torch.full((b_size,), real_label, device=device)
         # Forward pass real batch through D
         output = netD(real_cpu).view(-1)
