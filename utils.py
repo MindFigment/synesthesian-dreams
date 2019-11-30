@@ -6,6 +6,7 @@ import torchvision.utils as vutils
 from torchvision import transforms, utils
 from dataset import ArtDataset
 from torch.utils.data import Dataset, DataLoader
+import os 
 
 
 # Custom weights initialization called netG and netG
@@ -19,8 +20,9 @@ def weights_init(m):
 
 
 
-def plot_loss(G_losses, D_losses, save_path="./images/losses_plot.png", show=False):
-    fig = plt.figure(figsize=(10,5))
+def plot_loss(G_losses, D_losses, save_path="./images/", save_name="losses.plot.png", show=False):
+    save_as = os.path.join(save_path, save_name)
+    _ = plt.figure(figsize=(10,5))
     plt.title("Generator and Discriminator Loss During Training")
     plt.plot(G_losses,label="G")
     plt.plot(D_losses,label="D")
@@ -29,20 +31,22 @@ def plot_loss(G_losses, D_losses, save_path="./images/losses_plot.png", show=Fal
     plt.legend()
     if show:
         plt.show()
-    plt.savefig(save_path)
+    plt.savefig(save_as)
 
 
-def plot_animation(img_list, save_path="./images/real_vs_fake.gif", show=False):
+def plot_animation(img_list, save_path="./images/", save_name="real_vs_fake.gif", show=False):
+    save_as = os.path.join(save_path, save_name)
     fig = plt.figure(figsize=(20,20))
     plt.axis("off")
     ims = [[plt.imshow(np.transpose(vutils.make_grid(i, padding=2, nrow=int(np.sqrt(i.size(0))), normalize=True), (1,2,0)), animated=True)] for i in img_list]
     anim = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
     if show:
         plt.show()
-    anim.save(save_path, writer='imagemagick', dpi=30)
+    anim.save(save_as, writer='imagemagick', dpi=30)
 
 
-def plot_real_vs_fake(real_imgs, fake_imgs, save_path="./images/fake_vs_real.png", show=False):
+def plot_real_vs_fake(real_imgs, fake_imgs, save_path="./images/", save_name="fake_vs_real.png", show=False):
+    save_as = os.path.join(save_path, save_name)
     # Plot the real images
     plt.figure(figsize=(15,15))
     plt.subplot(1,2,1)
@@ -57,7 +61,7 @@ def plot_real_vs_fake(real_imgs, fake_imgs, save_path="./images/fake_vs_real.png
     plt.imshow(np.transpose(vutils.make_grid(fake_imgs, nrow=int(np.sqrt(fake_imgs.size(0))), padding=5, normalize=True),(1,2,0)))
     if show:
         plt.show()
-    plt.savefig(save_path)
+    plt.savefig(save_as)
 
 
 if __name__ == "__main__":
