@@ -242,9 +242,9 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
 
     real_batch = next(iter(dataloader))
 
-    plot_loss(G_losses, D_losses)
-    plot_animation(img_list)
-    plot_real_vs_fake(real_batch, img_list[-1])
+    plot_loss(G_losses, D_losses, plot_dir=model_name)
+    plot_animation(img_list, plot_dir=model_name)
+    plot_real_vs_fake(real_batch, img_list[-1], plot_dir=model_name)
 
 
 if __name__ == "__main__":

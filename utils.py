@@ -20,8 +20,13 @@ def weights_init(m):
 
 
 
-def plot_loss(G_losses, D_losses, save_path="./images/", save_name="losses.plot.png", show=False):
-    save_as = os.path.join(save_path, save_name)
+def plot_loss(G_losses, D_losses, plot_dir="toy_model", plot_name="losses_plot.png", show=False):
+
+    plot_dir = os.path.join(["./images", plot_dir])
+    os.makedirs(plot_dir, exist_ok=True) 
+    plot_path = os.path.join(plot_dir, plot_name)
+    save_as = os.path.join(plot_path, plot_name)
+
     _ = plt.figure(figsize=(10,5))
     plt.title("Generator and Discriminator Loss During Training")
     plt.plot(G_losses,label="G")
@@ -34,8 +39,13 @@ def plot_loss(G_losses, D_losses, save_path="./images/", save_name="losses.plot.
     plt.savefig(save_as)
 
 
-def plot_animation(img_list, save_path="./images/", save_name="real_vs_fake.gif", show=False):
-    save_as = os.path.join(save_path, save_name)
+def plot_animation(img_list, plot_dir="toy_model", plot_name="real_vs_fake.gif", show=False):
+
+    plot_dir = os.path.join(["./images", plot_dir])
+    os.makedirs(plot_dir, exist_ok=True) 
+    plot_path = os.path.join(plot_dir, plot_name)
+    save_as = os.path.join(plot_path, plot_name)
+
     fig = plt.figure(figsize=(20,20))
     plt.axis("off")
     ims = [[plt.imshow(np.transpose(vutils.make_grid(i, padding=2, nrow=int(np.sqrt(i.size(0))), normalize=True), (1,2,0)), animated=True)] for i in img_list]
@@ -45,8 +55,13 @@ def plot_animation(img_list, save_path="./images/", save_name="real_vs_fake.gif"
     anim.save(save_as, writer='imagemagick', dpi=30)
 
 
-def plot_real_vs_fake(real_imgs, fake_imgs, save_path="./images/", save_name="fake_vs_real.png", show=False):
-    save_as = os.path.join(save_path, save_name)
+def plot_real_vs_fake(real_imgs, fake_imgs, plot_dir="toy_model", plot_name="fake_vs_real.png", show=False):
+    
+    plot_dir = os.path.join(["./images", plot_dir])
+    os.makedirs(plot_dir, exist_ok=True) 
+    plot_path = os.path.join(plot_dir, plot_name)
+    save_as = os.path.join(plot_path, plot_name)
+
     # Plot the real images
     plt.figure(figsize=(15,15))
     plt.subplot(1,2,1)
