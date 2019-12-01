@@ -20,7 +20,7 @@ import click
 @click.option("--model_dir", default="toy_model")
 @click.option("--model_name", default="toy_model")
 @click.option("--load_model", is_flag=True, default=False, help="Set if you want to load existing model called model_name from model_dir")
-@click.option("--save_model", is_flag=True, default=True, help="Set if you want to save model during training")
+@click.option("--save_model", is_flag=True, default=False, help="Set if you want to save model during training")
 def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, save_model):
 
     # Numbers of workers for dataloader
@@ -108,10 +108,13 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
     end = None
 
     if load_model:
-        checkpoint = torch.load(model_path)
+        
+        checkpoint = torch.load("".join([model_path, ".pt"]))
 
-        netD.load_state_dict(checkpoint["modelD_state_dict"])
-        netG.load_state_dict(checkpoint["modelG_state_dict"])
+        print(f"Loading model {model_path}")
+
+        netD.load_state_dict(checkpoint["netD_state_dict"])
+        netG.load_state_dict(checkpoint["netG_state_dict"])
 
         optimizerD.load_state_dict(checkpoint['optimizerD_state_dict'])
         optimizerG.load_state_dict(checkpoint['optimizerG_state_dict'])
@@ -154,6 +157,7 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
 
     print(f"Data root: {data_root}, use gpu: {use_gpu}")
     print(f"Model path: {model_path}")
+    print(f"Save model {save_model}")
         
     # For each epoch
     for epoch in range(start, end):
@@ -226,7 +230,7 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
                 img_list.append(fake)
 
                 if save_model:
-                    model_checkpoint = "".join([model_path, epoch])
+                    model_checkpoint = "".join([model_path, "_", str(epoch), ".pt"])
                     print(f"Saving model... to {model_checkpoint}")
                     torch.save({
                         "netD_state_dict": netD.state_dict(),
@@ -243,7 +247,7 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
     real_batch = next(iter(dataloader))
 
     plot_loss(G_losses, D_losses, plot_dir=model_name)
-    plot_animation(img_list, plot_dir=model_name)
+    plot_animation(img_list[-16:], plot_dir=model_name)
     plot_real_vs_fake(real_batch, img_list[-1], plot_dir=model_name)
 
 

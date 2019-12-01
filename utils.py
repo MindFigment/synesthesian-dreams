@@ -22,9 +22,8 @@ def weights_init(m):
 
 def plot_loss(G_losses, D_losses, plot_dir="toy_model", plot_name="losses_plot.png", show=False):
 
-    plot_dir = os.path.join(["./images", plot_dir])
-    os.makedirs(plot_dir, exist_ok=True) 
-    plot_path = os.path.join(plot_dir, plot_name)
+    plot_path = os.path.join("./images", plot_dir)
+    os.makedirs(plot_path, exist_ok=True) 
     save_as = os.path.join(plot_path, plot_name)
 
     _ = plt.figure(figsize=(10,5))
@@ -41,9 +40,8 @@ def plot_loss(G_losses, D_losses, plot_dir="toy_model", plot_name="losses_plot.p
 
 def plot_animation(img_list, plot_dir="toy_model", plot_name="real_vs_fake.gif", show=False):
 
-    plot_dir = os.path.join(["./images", plot_dir])
-    os.makedirs(plot_dir, exist_ok=True) 
-    plot_path = os.path.join(plot_dir, plot_name)
+    plot_path = os.path.join("./images", plot_dir)
+    os.makedirs(plot_path, exist_ok=True) 
     save_as = os.path.join(plot_path, plot_name)
 
     fig = plt.figure(figsize=(20,20))
@@ -57,9 +55,8 @@ def plot_animation(img_list, plot_dir="toy_model", plot_name="real_vs_fake.gif",
 
 def plot_real_vs_fake(real_imgs, fake_imgs, plot_dir="toy_model", plot_name="fake_vs_real.png", show=False):
     
-    plot_dir = os.path.join(["./images", plot_dir])
-    os.makedirs(plot_dir, exist_ok=True) 
-    plot_path = os.path.join(plot_dir, plot_name)
+    plot_path = os.path.join("./images", plot_dir)
+    os.makedirs(plot_path, exist_ok=True) 
     save_as = os.path.join(plot_path, plot_name)
 
     # Plot the real images
@@ -67,13 +64,13 @@ def plot_real_vs_fake(real_imgs, fake_imgs, plot_dir="toy_model", plot_name="fak
     plt.subplot(1,2,1)
     plt.axis("off")
     plt.title("Real Images")
-    plt.imshow(np.transpose(vutils.make_grid(real_imgs, nrow=int(np.sqrt(real_imgs.size(0))), padding=5, normalize=True), (1,2,0)))
+    plt.imshow(np.transpose(vutils.make_grid(real_imgs[:16], nrow=int(np.sqrt(real_imgs[:16].size(0))), padding=5, normalize=True), (1,2,0)))
 
     # Plot the fake images from the last epoch
     plt.subplot(1,2,2)
     plt.axis("off")
     plt.title("Fake Images")
-    plt.imshow(np.transpose(vutils.make_grid(fake_imgs, nrow=int(np.sqrt(fake_imgs.size(0))), padding=5, normalize=True),(1,2,0)))
+    plt.imshow(np.transpose(vutils.make_grid(fake_imgs[:16], nrow=int(np.sqrt(fake_imgs[:16].size(0))), padding=5, normalize=True),(1,2,0)))
     if show:
         plt.show()
     plt.savefig(save_as)
