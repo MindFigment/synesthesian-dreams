@@ -1,22 +1,21 @@
 from tkinter import *
 import numpy as np
 from functools import partial
-import tensorflow as tf
+import torch
 from PIL import ImageTk, Image
-
-latent_code_size = 10
+from models import Generator
+import click
 
 class LatentCodePanel(Frame):
-    def __init__(self, parent, latent_code_size):
+    def __init__(self, parent, model_path):
         Frame.__init__(self, parent)
         self.parent = parent
-        self.size = latent_code_size
+        self.model_path = model_path
         self.scales = []
         self.latent = []
         self.labels = []
-        self.latent_code = tf.random.normal([1, 100]).numpy()
-        self.loaded = None
-        self.infer = None
+        self.device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
+        print(self.device)
         self.photo = None
         self.initialize()
 
@@ -24,6 +23,21 @@ class LatentCodePanel(Frame):
         """
         Draw GUI
         """
+
+        # Load Model
+        checkpoint = torch.load("".join([self.model_path, ".pt"]), map_location=self.device)
+        self.latent_vector_size = 100
+        netG_params = {
+            "latent_vector_size": 100,
+            "feature_maps_size": 64,
+            "channels_num": 3
+        }
+        # Crate and load generator
+        self.netG = Generator(**netG_params).to(self.device)
+        self.netG.load_state_dict(checkpoint["netG_state_dict"])
+        print(self.netG)
+        self.netG.eval()
+        self.latent_code = torch.randn(1, self.latent_vector_size, 1, 1, device=self.device)
 
         self.frame = Frame(self.parent)
         self.frame.grid(row=0, column=0)
@@ -33,7 +47,7 @@ class LatentCodePanel(Frame):
         latent_code_label.grid(row=0, column=0)
 
         # Create a latent code panel
-        for i in range(0, 50):
+        for i in range(0, 10):
             var = DoubleVar(value=self.latent_code[0][i])
             self.latent.append(var)
             label = Label(self.frame, textvariable=var)
@@ -45,13 +59,10 @@ class LatentCodePanel(Frame):
             self.labels[i].grid(row=i+1, column=1)
 
 
-        self.loaded = tf.saved_model.load("./models/1/")
-        self.infer = self.loaded.signatures["serving_default"]
-
-
     def generate_image(self):
-        x = self.infer(tf.convert_to_tensor(self.latent_code, dtype=tf.float32))
-        img = x["conv2d_transpose_2"].numpy().squeeze()
+        img = self.netG(self.latent_code).detach().numpy().squeeze()
+
+        img = np.transpose(img, (1, 2, 0))
 
         canvas = Canvas(self.frame2, width = 256, height = 256) 
         canvas.grid(row=0, column=1)
@@ -62,21 +73,27 @@ class LatentCodePanel(Frame):
         img = img.resize((256, 256))
         self.photo = ImageTk.PhotoImage(image=img)
         canvas.create_image(20, 20, anchor=NW, image=self.photo)
-
+        
     def scale_manipulation(self, selection, index):
         print("Index: {}, selection: {}".format(index, selection))
         self.latent_code[0][index] = float(selection)
         self.generate_image()
 
-
-if __name__ == "__main__":
-
+@click.command()
+@click.option("--mn", default="first_model", help="Give the name of the model")
+@click.option("--mv", default="0", help="Give the name of the model")
+def main(mn, mv):
     root = Tk()
     root.title("Manipulate GAN's generated image")
     root.geometry("600x600")
     root.grid_rowconfigure(1, weight=1)
     root.grid_columnconfigure(1, weight=1)
 
-    latent_code_panel = LatentCodePanel(root, latent_code_size)
+    model_path = "".join(["./models/", mn, "_", mv])
+    print(f"Model path: {model_path}")
+    _ = LatentCodePanel(root, model_path)
 
     root.mainloop()
+
+if __name__ == "__main__":
+    main()

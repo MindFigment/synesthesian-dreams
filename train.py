@@ -20,8 +20,9 @@ import click
 @click.option("--model_dir", default="toy_model")
 @click.option("--model_name", default="toy_model")
 @click.option("--load_model", is_flag=True, default=False, help="Set if you want to load existing model called model_name from model_dir")
-@click.option("--save_model", is_flag=True, default=False, help="Set if you want to save model during training")
-def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, save_model):
+@click.option("--save_model_every", default=0, help="Set how often you want to save your model, if set to 0 model won't be saved at all")
+@click.option("--check_gen_every", default=0, help="Set how often you want to check your generator performance")
+def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, save_model_every, check_gen_every):
 
     # Numbers of workers for dataloader
     workers = 2
@@ -138,7 +139,6 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
     # Losses
     criterion = nn.BCELoss() 
 
-
     # Create batch of latent vectors that we will use to visualize the progression of the generator
     fixed_noise = torch.randn(64, nz, 1, 1, device=device)
 
@@ -157,13 +157,15 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
 
     print(f"Data root: {data_root}, use gpu: {use_gpu}")
     print(f"Model path: {model_path}")
-    print(f"Save model {save_model}")
+    print(f"Save model every {save_model_every} epochs")
+    print(f"Check generator every {check_gen_every} epochs")
         
     # For each epoch
     for epoch in range(start, end):
         # For each batch in the dataloader
         for i, data in enumerate(dataloader):
 
+            # Perform one step of learning
             ##############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ##############################
@@ -219,31 +221,36 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f' 
                             % (epoch, end, i, len(dataloader), errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
 
-                # Save Losses for plotting later
-                G_losses.append(errG.item())
-                D_losses.append(errD.item())
+            # Save Losses for plotting later
+            G_losses.append(errG.item())
+            D_losses.append(errD.item())
 
             # Check how the generator is doing by saving G's output on fixed_noise
-            if (iters % 300 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
+            if check_gen_every != 0 and (iters % check_gen_every == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
                 with torch.no_grad():
                     fake = netG(fixed_noise).detach().cpu()
                 img_list.append(fake)
 
-                if save_model:
-                    model_checkpoint = "".join([model_path, "_", str(epoch), ".pt"])
-                    print(f"Saving model... to {model_checkpoint}")
-                    torch.save({
-                        "netD_state_dict": netD.state_dict(),
-                        "netG_state_dict": netG.state_dict(),
-                        "optimizerD_state_dict": optimizerD.state_dict(),
-                        "optimizerG_state_dict": optimizerG.state_dict(),
-                        "epoch": epoch,
-                        "lossD": errD.item(),
-                        "lossG": errG.item()
-                        }, model_checkpoint)
+            # Save model params
+            if save_model_every != 0 and (iters % save_model_every == 0) and ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
+                model_checkpoint = "".join([model_path, "_", str(epoch), ".pt"])
+                print(f"Saving model... to {model_checkpoint}")
+                torch.save({
+                    "netD_state_dict": netD.state_dict(),
+                    "netG_state_dict": netG.state_dict(),
+                    "optimizerD_state_dict": optimizerD.state_dict(),
+                    "optimizerG_state_dict": optimizerG.state_dict(),
+                    "epoch": epoch,
+                    "lossD": errD.item(),
+                    "lossG": errG.item(),
+                    "latent_vector_size": nz,
+                    "feature_maps_size": ngf,
+                    "channels_num": nc
+                    }, model_checkpoint)
 
-            iters += 1
+        iters += 1
 
+    # Save plots
     real_batch = next(iter(dataloader))
 
     plot_loss(G_losses, D_losses, plot_dir=model_name)
