@@ -225,28 +225,28 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
             G_losses.append(errG.item())
             D_losses.append(errD.item())
 
-            # Check how the generator is doing by saving G's output on fixed_noise
-            if check_gen_every != 0 and ((iters % check_gen_every == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1))):
-                with torch.no_grad():
-                    fake = netG(fixed_noise).detach().cpu()
-                img_list.append(fake)
+        # Check how the generator is doing by saving G's output on fixed_noise
+        if check_gen_every != 0 and ((iters % check_gen_every == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1))):
+            with torch.no_grad():
+                fake = netG(fixed_noise).detach().cpu()
+            img_list.append(fake)
 
-            # Save model params
-            if save_model_every != 0 and ((iters % save_model_every == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1))):
-                model_checkpoint = "".join([model_path, "_", str(epoch), ".pt"])
-                print(f"Saving model... to {model_checkpoint}")
-                torch.save({
-                    "netD_state_dict": netD.state_dict(),
-                    "netG_state_dict": netG.state_dict(),
-                    "optimizerD_state_dict": optimizerD.state_dict(),
-                    "optimizerG_state_dict": optimizerG.state_dict(),
-                    "epoch": epoch,
-                    "lossD": errD.item(),
-                    "lossG": errG.item(),
-                    "latent_vector_size": nz,
-                    "feature_maps_size": ngf,
-                    "channels_num": nc
-                    }, model_checkpoint)
+        # Save model params
+        if save_model_every != 0 and ((iters % save_model_every == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1))):
+            model_checkpoint = "".join([model_path, "_", str(epoch), ".pt"])
+            print(f"Saving model... to {model_checkpoint}")
+            torch.save({
+                "netD_state_dict": netD.state_dict(),
+                "netG_state_dict": netG.state_dict(),
+                "optimizerD_state_dict": optimizerD.state_dict(),
+                "optimizerG_state_dict": optimizerG.state_dict(),
+                "epoch": epoch,
+                "lossD": errD.item(),
+                "lossG": errG.item(),
+                "latent_vector_size": nz,
+                "feature_maps_size": ngf,
+                "channels_num": nc
+                }, model_checkpoint)
 
         iters += 1
 
@@ -254,7 +254,7 @@ def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, sa
     real_batch = next(iter(dataloader))
 
     plot_loss(G_losses, D_losses, plot_dir=model_name)
-    plot_animation(img_list[-16:], plot_dir=model_name)
+    plot_animation(img_list, plot_dir=model_name)
     plot_real_vs_fake(real_batch, img_list[-1], plot_dir=model_name)
 
 
