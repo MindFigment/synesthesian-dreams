@@ -25,7 +25,7 @@ import click
 def train(epochs, batch_size, nz, use_gpu, model_dir, model_name, load_model, save_model_every, check_gen_every):
 
     # Numbers of workers for dataloader
-    workers = 2
+    # workers = 2
 
     # batch_size: batch size during training
 
