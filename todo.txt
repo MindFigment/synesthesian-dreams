@@ -1,5 +1,0 @@
-1. Make graphical interface to easly explore different model generated samples
-2. Improve bash scripts, for example when downloading models check if there is already model directory and iif not create it
-3. Create Model class that take Discriminator and Generator as init args and has train and train_step function
-4. Add function from jupyter notebooks to utils
-5. Work on feature extraction fro music files

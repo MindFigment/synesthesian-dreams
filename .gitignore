@@ -1,4 +1,3 @@
 __pycache__/
 *.zip
-*.sh
-!.run_model.sh
+*.ipynb
