@@ -2,7 +2,6 @@ import os
 import logging
 
 
-
 def updateConfig(obj, ref):
     if isinstance(ref, dict):
         for member, value in ref.items():
