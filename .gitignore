@@ -2,3 +2,4 @@ __pycache__/
 *.zip
 *.ipynb
 jupyter_notebooks/
+*.avi
