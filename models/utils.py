@@ -1,6 +1,7 @@
 from models.schedulers.cosine import RLScheduleCosine
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 ################################
@@ -36,3 +37,5 @@ def get_scheduler(scheduler_name, optimizer, **kwargs):
 def get_loss_criterion(loss):
     if loss == "BCE":
         return nn.BCELoss()
+
+        

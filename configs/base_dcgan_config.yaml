@@ -1,6 +1,6 @@
 
 # Name of this experiment
-exp_name: "dcgan_64_100_04"
+exp_name: "early_stopper_check"
 
 # GAN trainer
 trainer: "DCGAN"
@@ -14,7 +14,7 @@ t_c:
   want_log: True
 
   # Setup image size, it's here because we need it in trainer and model classes
-  img_size: 64
+  img_size: 128
 
   # Basic utilities
   save: True
@@ -22,12 +22,13 @@ t_c:
   # Saving options
   save_ext: ".pt"
 
-  load: True
+  load: False
+  load_config: False # Some parameters don't have to be updated: lr, beta1, beta2, loss_criterion
   load_netD: True
   load_netG: True
   load_optimD: True
   load_optimG: True
-  load_model: "experiments/dcgan_64_100_04/checkpoints/0.pt"
+  load_model: "experiments/dcgan_64_100_04/checkpoints/200.pt"
   # load_model: "./checkpoints/base_model/5.pt"
 
   test: True
@@ -35,10 +36,10 @@ t_c:
   sample_size: 16 # How many samples to produce during testing
 
   # Training characterization
-  batch_size: 512
+  batch_size: 128
   shuffle: True
-  num_workers: 4
-  epochs: 300
+  num_workers: 6
+  epochs: 100
 
   # Data root
   data_roots: ["./data/best_artworks_of_all_time/normal", "./data/wikiart"]
@@ -51,7 +52,7 @@ t_c:
 m_c:
 
   # Learning options
-  lr: 2e-4
+  lr: 2e-5
   beta1: 0.4
   beta2: 0.999
   nz: 100
@@ -66,19 +67,21 @@ m_c:
   ######################
 
   use_schedulerD: False
-  schedulerD_name: "ReduceRLOnPlateau"
+  # schedulerD_name: "ReduceRLOnPlateau"
+  schedulerD_name: "Cosine"
 
   sD_c:
-    factor: 0.05 
-    patience: 10 
-    min_lr: 0.0001
-    verbose: True
+    # factor: 0.05 
+    # patience: 10 
+    # min_lr: 0.0001
+    verbose: False
 
   use_schedulerG: False
-  schedulerG_name: "ReduceRLOnPlateau"
+  # schedulerG_name: "ReduceRLOnPlateau"
+  schedulerG_name: "Cosine"
 
   sG_c:
-    factor: 0.05 
-    patience: 10 
-    min_lr: 0.0001
-    verbose: True
+    # factor: 0.05 
+    # patience: 10 
+    # min_lr: 0.0001
+    verbose: False

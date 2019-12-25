@@ -11,6 +11,9 @@ from easydict import EasyDict as edict
 import torch
 from torchvision import transforms, utils
 
+from trainers.callbacks.early_stopping import EarlyStopping2
+
+
 class BaseGANTrainer():
     """
     .
@@ -20,6 +23,10 @@ class BaseGANTrainer():
                  t_c,
                  m_c
                  ):
+
+        self._stop_training = False
+        self.early_stopper_D = EarlyStopping2(patience=20, low_threshold=0.009, up_threshold=0.99, verbose=False)
+        self.early_stopper_G = EarlyStopping2(patience=20, low_threshold=0.009, up_threshold=0.99, verbose=False)
 
         if "t_c" not in vars(self):
             self.t_c = edict()
@@ -34,6 +41,7 @@ class BaseGANTrainer():
 
             self.t_c.load = t_c.load
             if self.t_c.load:
+                self.t_c.load_config = t_c.load_config
                 self.t_c.load_model = t_c.load_model
                 self.t_c.load_netD = t_c.load_netD
                 self.t_c.load_netG = t_c.load_netG
@@ -86,17 +94,20 @@ class BaseGANTrainer():
 
         all_batches = len(dataloader)
 
+        self.model.reset_meters()
+
         # For each batch in the dataloader
         for batch_num, batch_data in enumerate(dataloader):
             
             errD, errG, D_x, D_G_z1, D_G_z2 = self.model._train_step(batch_data)
             # Log batch stats into terminal
-            log_train_step_stats(epoch, self.end, batch_num, all_batches, errD.item(), errG.item(), D_x, D_G_z1, D_G_z2)
+            log_train_step_stats(epoch, self.end, batch_num, all_batches, errD, errG, D_x, D_G_z1, D_G_z2)
 
-            if self.t_c.want_log:
-                self.summary_writer.plot_losses("D loss vs G loss", "D", "G", errD.item(), errG.item(), epoch)
-                self.summary_writer.plot_gans_precisions("D_x", "D_G_z", "Before train step", "After train step", D_x, D_G_z1, D_G_z2, epoch)
-                self.summary_writer.plot_scalar("After minus before step", D_G_z2 - D_G_z1, epoch)
+            
+            self._stop_training = self.early_stopper_D.feed(D_x) or self.early_stopper_G.feed(D_G_z2)
+
+            if self._stop_training:
+                exit(-1)
 
         # Save model
         if self.t_c.save and epoch % self.t_c.save_every == 0:
@@ -110,9 +121,12 @@ class BaseGANTrainer():
 
             if self.t_c.want_log:
                 self.summary_writer.real_vs_fake(f"Real vs fake", "real", "fake", real_sample, fake_sample, epoch)
-            # self.tensorboard.model_graph(self.model.netD, batch_data.to(self.model.device))
-            # self.tensorboard.model_graph(self.model.netG, self.model.generate_fixed_noise(len(batch_data)))
         
+        if self.t_c.want_log:
+                d_mean, d_std = self.model.meterD.value()
+                g_mean, g_std = self.model.meterG.value()
+                self.summary_writer.plot_losses("LossesMeans", "D", "G", d_mean, g_mean, epoch)
+                self.summary_writer.plot_losses("LossesStds", "D", "G", d_std, g_std, epoch)
 
         self.model.epochs_trained += 1
 

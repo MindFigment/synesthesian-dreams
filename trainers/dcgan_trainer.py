@@ -3,6 +3,7 @@ from logger.utils import log_train_step_stats
 from datasets.art_dataset import ArtDataset
 
 from easydict import EasyDict as edict
+from pprint import pprint
 
 import torch
 from torchvision import transforms, utils
@@ -29,10 +30,14 @@ class DCGANTrainer(BaseGANTrainer):
 
         if self.t_c.load:
             self.model.load(path=self.t_c.load_model,
+                            load_config=self.t_c.load_config,
                             load_netD=self.t_c.load_netD,
                             load_netG=self.t_c.load_netG,
                             load_optimD=self.t_c.load_optimD,
                             load_optimG=self.t_c.load_optimG)
+
+            print("NEW MODEL LOADED CONFIG")
+            pprint(self.model.config)
         
         self.start = self.model.epochs_trained
         self.end = self.t_c.epochs  + self.start

@@ -3,7 +3,7 @@ from models.meters.base_meter import Meter
 import torch
 
 
-class MovingAverageValueMeter(meter.Meter):
+class MovingAverageValueMeter(Meter):
     def __init__(self, windowsize):
         super(MovingAverageValueMeter, self).__init__()
         self.windowsize = windowsize

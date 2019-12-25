@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from torchsummary import summary
 import numpy as np
@@ -55,13 +56,13 @@ class Generator(nn.Module):
                  img_size,
                  nz,
                  ngf, 
-                 channels_num):
+                 nc):
         super(Generator, self).__init__()
         
         self.img_size = img_size
         self.nz = nz
         self.ngf = ngf
-        self.nc = channels_num
+        self.nc = nc
 
         self.main = self._make_layers(self.img_size, self.nz, self.ngf, self.nc)
         

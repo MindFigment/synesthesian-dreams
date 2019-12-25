@@ -13,9 +13,9 @@ class DCGAN(BaseGAN):
     """
 
     def __init__(self,
-                 ngf,
-                 ndf,
-                 nc,
+                 ngf=64,
+                 ndf=64,
+                 nc=3,
                  **kwargs):
 
         if "config" not in vars(self):

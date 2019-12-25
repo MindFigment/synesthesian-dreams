@@ -26,10 +26,12 @@ class BaseGAN():
                  loss_criterion="BCE",
                  use_schedulerD=False,
                  use_schedulerG=False,
+                 meterD=AverageValueMeter(),
+                 meterG=AverageValueMeter(),
                  **kwargs):
 
-        self.meterD1 = AverageValueMeter()
-        self.meterG1 = AverageValueMeter()
+        self.meterD = meterD
+        self.meterG = meterG
 
         self.meterD2 = MovingAverageValueMeter(10)
         self.meterG2 = MovingAverageValueMeter(10)
@@ -100,7 +102,7 @@ class BaseGAN():
              load_netD=True,
              load_optimD=True,
              load_optimG=True,
-             loadConfig=True):
+             load_config=True):
 
         in_state = torch.load(path)
 
@@ -109,9 +111,26 @@ class BaseGAN():
                               load_netD=load_netD,
                               load_optimD=load_optimD,
                               load_optimG=load_optimG,
-                              loadConfig=loadConfig)
+                              load_config=load_config)
 
         print(f"Loaded model: {path}")
+
+
+    def load_netG_for_eval(self, path):
+        # Load Model
+        checkpoint = torch.load(path, map_location=self.device)
+        config = checkpoint["config"]
+        netG_params = {
+            "img_size": config.img_size,
+            "nz": config.nz,
+            "ngf": config.ngf,
+            "nc": config.nc
+        }
+        # Create and load generator
+        self.netG = Generator(**netG_params).to(self.device)
+        self.netG.load_state_dict(checkpoint["netG"])
+        # print(netG)
+        self.netG.eval()
 
 
     def save(self, path, ext):
@@ -156,10 +175,10 @@ class BaseGAN():
                          load_netD=True,
                          load_optimG=True,
                          load_optimD=True,
-                         loadConfig=True,
+                         load_config=True,
                          train=True):
 
-        if loadConfig:
+        if load_config:
             updateConfig(self.config, in_state["config"])
             self.loss_criterion = get_loss_criterion(self.config.loss_criterion)
 
@@ -223,6 +242,14 @@ class BaseGAN():
         return fixed_noise
 
 
+    def reset_meters(self):
+        self.meterD.reset()
+        self.meterD.reset()
+
+        self.meterG2.reset()
+        self.meterG2.reset()
+
+
     def _train_step(self, input_batch):
 
         # Perform one step of learning
@@ -284,15 +311,14 @@ class BaseGAN():
 
         
         # Apply meters to the losses
-        self.meterD1.add(errD)
-        self.meterG1.add(errG)
+        self.meterD.add(errD.item())
+        self.meterG.add(errG.item())
 
-        self.meterD2.add(errD)
-        self.meterG2.add(errG)
+        self.meterD2.add(errD.item())
+        self.meterG2.add(errG.item())
 
-
-        # return errD, errG, D_x, D_G_z1, D_G_z2
-        return self.meterD1.value(), self.meterG1.value(), D_x, D_G_z1, D_G_z2
+        return errD.item(), errG.item(), D_x, D_G_z1, D_G_z2
+        # return self.meterD.value(), self.meterG.value(), D_x, D_G_z1, D_G_z2
         # return self.meterD2.value(), self.meterG2.value(), D_x, D_G_z1, D_G_z2
         
 
