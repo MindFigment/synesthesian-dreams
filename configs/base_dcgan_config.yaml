@@ -1,6 +1,6 @@
 
 # Name of this experiment
-exp_name: "dcgan_even_longer"
+exp_name: "dcgan_spectral_256_nz30"
 
 # GAN trainer
 trainer: "DCGAN"
@@ -12,17 +12,18 @@ trainer: "DCGAN"
 t_c:
 
   want_log: True
+  use_early_stopping: False
 
   # Setup image size, it's here because we need it in trainer and model classes
-  img_size: 64
+  img_size: 256
 
   # Basic utilities
   save: True
-  save_every: 20 # After how many epochs save the model
+  save_every: 10 # After how many epochs save the model
   # Saving options
   save_ext: ".pt"
 
-  load: True
+  load: False
   load_config: False # Some parameters don't have to be updated: lr, beta1, beta2, loss_criterion
   load_netD: True
   load_netG: True
@@ -32,14 +33,14 @@ t_c:
   # load_model: "./checkpoints/base_model/5.pt"
 
   test: True
-  test_every: 10 # After how many epochs test the model
+  test_every: 1 # After how many epochs test the model
   sample_size: 16 # How many samples to produce during testing
 
   # Training characterization
-  batch_size: 512
+  batch_size: 32
   shuffle: True
   num_workers: 6
-  epochs: 100
+  epochs: 300
 
   # Data root
   data_roots: ["./data/best_artworks_of_all_time/normal", "./data/wikiart"]
@@ -52,15 +53,21 @@ t_c:
 m_c:
 
   # Learning options
-  lr: 1e-5
+  lr_D: 2e-4
+  lr_G: 1e-4
   beta1: 0.4
   beta2: 0.999
-  nz: 100
+  nz: 30
   ndf: 64
   ngf: 64
   nc: 3
   loss_criterion: "BCE"
   use_gpu: True
+  add_noise: False
+  use_spectral_norm_D: True
+  use_spectral_norm_G: True
+  use_label_smoothing: False
+  smooth_label: 0.9
 
   ######################
   ## Scheduler config ##

@@ -27,12 +27,16 @@ class TensorboardWriter():
         self.writer.add_scalar(tag2 + "/" + cat3, scalar3, epoch)
 
 
-    def image_summary(self, tag, images):
-        # create grid of images
-        img_grid = vutils.make_grid(images)
+    def image_summary(self, tag, images, epoch):
 
-        # write to tensorboard
-        self.writer.add_image(tag, img_grid)
+        if type(images) == list:
+            for i in range(len(images)):
+                tag_tmp = tag + str(i)
+                img_grid = vutils.make_grid(images[i], normalize=True)
+                self.writer.add_image(tag_tmp, img_grid, epoch)
+        else:
+            img_grid = vutils.make_grid(images, normalize=True)
+            self.writer.add_image(tag, img_grid, epoch)
 
 
     def model_graph(self, model, inputs):

@@ -2,7 +2,7 @@ from importlib import import_module
 
 def get_trainer(trainer):
 
-    trainers = {"DCGAN": ("dcgan_trainer", "DCGANTrainer")}
+    trainers = {"DCGAN": ("dcgan_trainer", "DCGANTrainer"), "MSGGAN": ("msggan_trainer", "MSGGANTrainer")}
 
     if trainer not in trainers:
         raise AttributeError(f"Invalid module name: {trainer}")

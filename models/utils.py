@@ -38,4 +38,7 @@ def get_loss_criterion(loss):
     if loss == "BCE":
         return nn.BCELoss()
 
+    elif loss == "BCELogits":
+        return nn.BCEWithLogitsLoss()
+
         

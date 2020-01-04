@@ -9,6 +9,9 @@ import torch
 from torchvision import transforms, utils
 from trainers.base_gan_trainer import BaseGANTrainer
 
+import numpy as np
+
+
 class DCGANTrainer(BaseGANTrainer):
     """
     .
@@ -26,23 +29,4 @@ class DCGANTrainer(BaseGANTrainer):
         self.model = DCGAN(img_size=self.t_c.img_size, **self.m_c)
 
 
-    def train(self):
 
-        if self.t_c.load:
-            self.model.load(path=self.t_c.load_model,
-                            load_config=self.t_c.load_config,
-                            load_netD=self.t_c.load_netD,
-                            load_netG=self.t_c.load_netG,
-                            load_optimD=self.t_c.load_optimD,
-                            load_optimG=self.t_c.load_optimG)
-
-            print("NEW MODEL LOADED CONFIG")
-            pprint(self.model.config)
-        
-        self.start = self.model.epochs_trained
-        self.end = self.t_c.epochs  + self.start
-            
-
-        for epoch in range(self.start, self.end):
-            dataloader = self._get_dataloader()
-            self._train_one_epoch(dataloader, epoch)

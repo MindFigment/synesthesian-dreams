@@ -18,12 +18,12 @@ class EarlyStopping(object):
             if self.anger > self.patience:
                 self.stop_early = True
                 print(f"Anger reaches it's limit, training to coming to the end :(")
+                exit(-1)
         else:
             self.anger = 0
         
         self.prev_val = value
-
-        return self.stop_early
+            
 
 
 
@@ -45,8 +45,7 @@ class EarlyStopping2(object):
             if self.anger > self.patience:
                 self.stop_early = True
                 print(f"Anger reaches it's limit, training to coming to the end :(")
+                exit(-1)
         else:
             self.anger = 0
-
-        return self.stop_early
 

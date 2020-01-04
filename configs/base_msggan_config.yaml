@@ -1,0 +1,94 @@
+
+# Name of this experiment
+exp_name: "base_msggan_512_nz128"
+
+# GAN trainer
+trainer: "MSGGAN"
+
+##################
+## Train config ##
+##################
+
+t_c:
+
+  want_log: True
+  use_early_stopping: False
+
+  # Setup image size, it's here because we need it in trainer and model classes
+  img_size: 512
+
+  # Basic utilities
+  save: True
+  save_every: 10 # After how many epochs save the model
+  # Saving options
+  save_ext: ".pt"
+
+  load: False
+  load_config: False # Some parameters don't have to be updated: lr, beta1, beta2, loss_criterion
+  load_netD: True
+  load_netG: True
+  load_optimD: True
+  load_optimG: True
+  load_model: "experiments/base_msggan_256_nz64/checkpoints/40.pt"
+  # load_model: "./checkpoints/base_model/5.pt"
+
+  test: True
+  test_every: 1 # After how many epochs test the model
+  sample_size: 16 # How many samples to produce during testing
+
+  # Training characterizaion
+  batch_size: 16
+  shuffle: True
+  num_workers: 6
+  epochs: 250
+
+  # Data root
+  data_roots: ["./data/best_artworks_of_all_time/normal", "./data/wikiart"]
+  # data_roots: ["./data/best_artworks_of_all_time/normal"]
+
+##################
+## Model config ##
+##################
+
+m_c:
+
+  # Learning options
+  lr_D: 3e-4
+  lr_G: 3e-4
+  beta1: 0.4
+  beta2: 0.999
+  depth: 8
+  nz: 128
+  ndf: 128
+  nc: 3
+  loss_criterion: "BCELogits"
+  use_gpu: True
+  add_noise: False
+  use_spectral_norm_D: False
+  use_spectral_norm_G: False
+  use_label_smoothing: False
+  smooth_label: 0.9
+
+  ######################
+  ## Scheduler config ##
+  ######################
+
+  use_schedulerD: False
+  # schedulerD_name: "ReduceRLOnPlateau"
+  schedulerD_name: "Cosine"
+
+  sD_c:
+    # factor: 0.05 
+    # patience: 10 
+    # min_lr: 0.0001
+    verbose: False
+
+  use_schedulerG: False
+  # schedulerG_name: "ReduceRLOnPlateau"
+  schedulerG_name: "Cosine"
+
+  sG_c:
+    # factor: 0.05 
+    # patience: 10 
+    # min_lr: 0.0001
+    verbose: False

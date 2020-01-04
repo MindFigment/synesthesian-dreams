@@ -10,6 +10,13 @@ from models.utils import get_scheduler
 from models.meters.moving_avarage_meter import MovingAverageValueMeter
 from models.meters.average_meter import AverageValueMeter
 
+from models.losses.wgan_loss import WGAN_GP
+
+import torch.nn.functional as F
+import numpy as np
+
+from functools import wraps
+
 
 class BaseGAN():
     """
@@ -19,7 +26,8 @@ class BaseGAN():
     def __init__(self,
                  img_size=64,
                  nz=100,
-                 lr=2e-4,
+                 lr_D=2e-4,
+                 lr_G=1e-4,
                  beta1=0.5,
                  beta2=0.999,
                  use_gpu=True,
@@ -28,7 +36,13 @@ class BaseGAN():
                  use_schedulerG=False,
                  meterD=AverageValueMeter(),
                  meterG=AverageValueMeter(),
+                 add_noise=True,
+                 use_label_smoothing=False,
                  **kwargs):
+
+        if "config" not in vars(self):
+            self.config = edict()
+
 
         self.meterD = meterD
         self.meterG = meterG
@@ -37,19 +51,24 @@ class BaseGAN():
         self.meterG2 = MovingAverageValueMeter(10)
 
         self.device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
-        self.real_label = 1
-        self.fake_label = 0
+        
+        self.config.use_label_smoothing = use_label_smoothing
+        if self.config.use_label_smoothing:
+            self.real_label = kwargs["smooth_label"]
+        else:
+            self.real_label = 1
+        self.fake_label = 0    
+        self.fake_real_label = 1
 
         self.epochs_trained = 0
-
-        if "config" not in vars(self):
-            self.config = edict()
 
         self.config.img_size = img_size
         self.config.nz = nz
         self.config.loss_criterion = loss_criterion
+        self.config.add_noise = add_noise
 
-        self.config.lr = float(lr)
+        self.config.lr_D = float(lr_D)
+        self.config.lr_G = float(lr_G)
         self.config.beta1 = beta1
         self.config.beta2 = beta2
 
@@ -60,6 +79,7 @@ class BaseGAN():
         self.optimizerD = self._get_optimizerD()
 
         self.loss_criterion = get_loss_criterion(self.config.loss_criterion)
+        # self.loss_criterion = WGAN_GP(self.netD, use_gp=False)
 
         # Schedulers configuration
         self.config.use_schedulerD = use_schedulerD
@@ -117,21 +137,8 @@ class BaseGAN():
 
 
     def load_netG_for_eval(self, path):
-        # Load Model
-        checkpoint = torch.load(path, map_location=self.device)
-        config = checkpoint["config"]
-        netG_params = {
-            "img_size": config.img_size,
-            "nz": config.nz,
-            "ngf": config.ngf,
-            "nc": config.nc
-        }
-        # Create and load generator
-        self.netG = Generator(**netG_params).to(self.device)
-        self.netG.load_state_dict(checkpoint["netG"])
-        # print(netG)
-        self.netG.eval()
-
+        pass
+        
 
     def save(self, path, ext):
 
@@ -228,18 +235,11 @@ class BaseGAN():
 
 
     def generate_images(self, sample_size=1):
-
-        fixed_noise = self.generate_fixed_noise(sample_size)
-
-        with torch.no_grad():
-            fake = self.netG(fixed_noise).detach().cpu()
-
-        return fake
+        pass
 
 
     def generate_fixed_noise(self, sample_size=1):
-        fixed_noise = torch.randn(sample_size, self.config.nz, 1, 1, device=self.device)
-        return fixed_noise
+       pass
 
 
     def reset_meters(self):
@@ -251,77 +251,33 @@ class BaseGAN():
 
 
     def _train_step(self, input_batch):
+        raise NotImplementedError
 
-        # Perform one step of learning
-        ##############################
-        # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
-        ##############################
-        # Train with all-real batch
-        self.netD.zero_grad()
-        # Format batch
-        real_input = input_batch.to(self.device)
-        batch_size = real_input.size(0)
-        label = torch.full((batch_size,), self.real_label, device=self.device)
-        # Forward pass real batch through D
-        output = self.netD(real_input).view(-1)
-        # Calculate loss on all-real batch
-        errD_real = self.loss_criterion(output, label)
-        # calculate gradeints for D in backward pass
-        errD_real.backward()
-        D_x = output.mean().item()
 
-        # Train with all-fake batch
-        # Generate batch of latent vectors
-        noise = torch.randn(batch_size, self.config.nz, 1, 1, device=self.device)
-        # Generate fake image batch with 
-        fake = self.netG(noise)
-        label.fill_(self.fake_label)
-        # Classify all fake batch with D
-        output = self.netD(fake.detach()).view(-1)
-        # Calculate D's loss on the all-fake batch
-        errD_fake = self.loss_criterion(output, label)
-        # Calculate the gradients for this batch
-        errD_fake.backward()
-        D_G_z1 = output.mean().item()
-        # Add the gradients from all-real and all-fake batches
-        errD = errD_real + errD_fake
-        # Update D
-        self.optimizerD.step()
-
-        ###########################
-        # (2) Update G network: maximize log(D(G(z)))
-        ###########################
-        self.netG.zero_grad()
-        label.fill_(self.real_label)  # fake labels are real for generator cost
-        # Since we just updated D, perform another forward pass of all-fake batch through D
-        output = self.netD(fake).view(-1)
-        # Calculate G's loss based on this output
-        errG = self.loss_criterion(output, label)
-        # Calculate gradients for G
-        errG.backward()
-        D_G_z2 = output.mean().item()
-        # Update G
-        self.optimizerG.step()
-
+   
+    def scheduler(self, errD, errG):
         # Schedulers updates
         if self.config.use_schedulerD:
-            self.schedulerD.step(errD.item())
+            self.schedulerD.step(errD)
         if self.config.use_schedulerG:
-            self.schedulerG.step(errG.item())
+            self.schedulerG.step(errG)
 
-        
+
+    def meter(self, errD, errG):
         # Apply meters to the losses
-        self.meterD.add(errD.item())
-        self.meterG.add(errG.item())
+        self.meterD.add(errD)
+        self.meterG.add(errG)
 
-        self.meterD2.add(errD.item())
-        self.meterG2.add(errG.item())
+        self.meterD2.add(errD)
+        self.meterG2.add(errG)
 
-        return errD.item(), errG.item(), D_x, D_G_z1, D_G_z2
-        # return self.meterD.value(), self.meterG.value(), D_x, D_G_z1, D_G_z2
-        # return self.meterD2.value(), self.meterG2.value(), D_x, D_G_z1, D_G_z2
-        
 
+    def optimize_generator(self):
+        raise NotImplementedError
+
+
+    def optimize_discriminator(self):
+        raise NotImplementedError
 
 
 
